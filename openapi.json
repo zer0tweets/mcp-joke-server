@@ -1,0 +1,150 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Joke API",
+    "version": "1.0.0",
+    "description": "Get random programming jokes via Auth0-secured MCP server"
+  },
+  "servers": [
+    {
+      "url": "https://YOUR_VERCEL_URL.vercel.app",
+      "description": "Production server (update after deployment)"
+    }
+  ],
+  "paths": {
+    "/mcp/call-tool": {
+      "post": {
+        "operationId": "callMcpTool",
+        "summary": "Call an MCP tool",
+        "description": "Execute a tool on the MCP server. Currently supports: get_random_joke",
+        "security": [
+          {
+            "Auth0OAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tool"],
+                "properties": {
+                  "tool": {
+                    "type": "string",
+                    "enum": ["get_random_joke"],
+                    "description": "The name of the tool to execute"
+                  }
+                }
+              },
+              "examples": {
+                "getJoke": {
+                  "summary": "Get a random joke",
+                  "value": {
+                    "tool": "get_random_joke"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful tool execution",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "tool": {
+                      "type": "string"
+                    },
+                    "joke": {
+                      "type": "string",
+                      "description": "A random programming joke"
+                    },
+                    "user": {
+                      "type": "string",
+                      "description": "The authenticated user ID"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "tool": "get_random_joke",
+                  "joke": "Why do programmers prefer dark mode? Because light attracts bugs!",
+                  "user": "auth0|123456"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tool not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "available_tools": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Auth0OAuth": {
+        "type": "oauth2",
+        "description": "Auth0 OAuth 2.0 authentication",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://YOUR_AUTH0_DOMAIN.auth0.com/authorize",
+            "tokenUrl": "https://YOUR_AUTH0_DOMAIN.auth0.com/oauth/token",
+            "scopes": {}
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "Auth0OAuth": []
+    }
+  ]
+}
