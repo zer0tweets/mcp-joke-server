@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/mcp/call-tool",
-      "destination": "/api/mcp/call-tool"
+      "destination": "/api/call-tool"
     }
   ]
 }
