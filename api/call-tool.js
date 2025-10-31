@@ -51,9 +51,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check environment variables early
-  const auth0Domain = process.env.AUTH0_DOMAIN;
-  const auth0Audience = process.env.AUTH0_AUDIENCE;
+  // Check environment variables early and sanitize them
+  const auth0Domain = process.env.AUTH0_DOMAIN?.trim();
+  const auth0Audience = process.env.AUTH0_AUDIENCE?.trim();
 
   if (!auth0Domain || !auth0Audience) {
     console.error('Missing Auth0 configuration:', {
