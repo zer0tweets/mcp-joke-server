@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/.well-known/mcp.json",
-      "destination": "/api/.well-known/mcp.json"
+      "destination": "/api/mcp-manifest"
     },
     {
       "source": "/mcp/call-tool",
