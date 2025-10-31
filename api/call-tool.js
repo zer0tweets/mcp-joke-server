@@ -1,15 +1,26 @@
 import * as jose from 'jose';
 
+// Lazy-init JWKS to avoid cold start crashes
+let jwksCache = null;
+
+function getJWKS(domain) {
+  if (!domain) {
+    throw new Error('AUTH0_DOMAIN is not set');
+  }
+  if (!jwksCache) {
+    jwksCache = jose.createRemoteJWKSet(
+      new URL(`https://${domain}/.well-known/jwks.json`)
+    );
+  }
+  return jwksCache;
+}
+
 /**
  * Verify Auth0 JWT token
  */
 async function verifyAuth0Token(token, domain, audience) {
   try {
-    const JWKS = jose.createRemoteJWKSet(
-      new URL(`https://${domain}/.well-known/jwks.json`)
-    );
-
-    const { payload } = await jose.jwtVerify(token, JWKS, {
+    const { payload } = await jose.jwtVerify(token, getJWKS(domain), {
       issuer: `https://${domain}/`,
       audience: audience,
     });
@@ -40,10 +51,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Extract and verify token
-  const authHeader = req.headers.authorization;
+  // Check environment variables early
   const auth0Domain = process.env.AUTH0_DOMAIN;
   const auth0Audience = process.env.AUTH0_AUDIENCE;
+
+  if (!auth0Domain || !auth0Audience) {
+    console.error('Missing Auth0 configuration:', {
+      domain: auth0Domain ? 'SET' : 'MISSING',
+      audience: auth0Audience ? 'SET' : 'MISSING',
+      allEnvVars: Object.keys(process.env)
+    });
+    return res.status(500).json({
+      error: 'Server configuration error',
+      message: 'Auth0 environment variables are not properly configured'
+    });
+  }
+
+  // Extract and verify token
+  const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     // Return 401 with WWW-Authenticate header for ChatGPT discovery
@@ -60,14 +85,6 @@ export default async function handler(req, res) {
   }
 
   const token = authHeader.substring(7);
-
-  if (!auth0Domain || !auth0Audience) {
-    console.error('Missing Auth0 configuration');
-    return res.status(500).json({
-      error: 'Server configuration error',
-      message: 'Auth0 is not properly configured'
-    });
-  }
 
   // Verify the JWT token
   const payload = await verifyAuth0Token(token, auth0Domain, auth0Audience);
