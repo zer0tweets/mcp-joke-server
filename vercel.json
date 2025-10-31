@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/.well-known/mcp.json",
+      "destination": "/api/.well-known/mcp.json"
+    },
+    {
       "source": "/mcp/call-tool",
       "destination": "/api/call-tool"
     }
