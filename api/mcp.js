@@ -176,7 +176,7 @@ export default async function handler(req, res) {
         });
       }
 
-      case 'initialized': {
+      case 'notifications/initialized': {
         // Client confirms initialization is complete (notification - no response)
         if (isNotification) {
           return res.status(200).end();
@@ -270,7 +270,7 @@ export default async function handler(req, res) {
             code: -32601,
             message: 'Method not found',
             data: {
-              available_methods: ['initialize', 'initialized', 'ping', 'tools/list', 'tools/call'],
+              available_methods: ['initialize', 'notifications/initialized', 'ping', 'tools/list', 'tools/call'],
               requested_method: request.method
             }
           },
