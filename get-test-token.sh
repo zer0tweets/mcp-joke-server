@@ -6,7 +6,7 @@
 CLIENT_ID="${AUTH0_CLIENT_ID}"
 CLIENT_SECRET="${AUTH0_CLIENT_SECRET}"
 AUTH0_DOMAIN="dev-6dbxpm08ehelft8j.us.auth0.com"
-AUDIENCE="https://mcp-joke-server.vercel.app"
+AUDIENCE="https://mcp-joke-api"
 
 if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
   echo "Error: Please set AUTH0_CLIENT_ID and AUTH0_CLIENT_SECRET environment variables"
@@ -14,7 +14,7 @@ if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
   echo "To get these:"
   echo "1. Go to Auth0 Dashboard → Applications → Create Application"
   echo "2. Choose 'Machine to Machine Applications'"
-  echo "3. Authorize it for the API: https://mcp-joke-server.vercel.app"
+  echo "3. Authorize it for the API: https://mcp-joke-api"
   echo "4. Copy the Client ID and Client Secret"
   echo ""
   echo "Then run:"
