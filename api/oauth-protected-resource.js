@@ -5,6 +5,7 @@
 export default function handler(req, res) {
   const auth0Domain = process.env.AUTH0_DOMAIN?.trim();
   const auth0Audience = process.env.AUTH0_AUDIENCE?.trim();
+  const serverUrl = `https://${req.headers.host}`;
 
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,7 +17,7 @@ export default function handler(req, res) {
   }
 
   return res.status(200).json({
-    resource: auth0Audience,
+    resource: serverUrl,
     authorization_servers: [
       `https://${auth0Domain}`
     ],
