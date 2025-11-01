@@ -45,12 +45,24 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Only allow POST for JSON-RPC
-  if (req.method !== 'POST') {
+  // Support both GET and POST for MCP Streamable HTTP
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({
       jsonrpc: '2.0',
       error: { code: -32600, message: 'Method not allowed' },
       id: null
+    });
+  }
+
+  // Handle GET request - return endpoint info
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      name: 'joke-mcp-server',
+      version: '1.0.0',
+      transport: 'http',
+      capabilities: {
+        tools: true
+      }
     });
   }
 
@@ -129,9 +141,28 @@ export default async function handler(req, res) {
               version: '1.0.0'
             },
             capabilities: {
-              tools: {}
+              tools: {},
+              logging: {}
             }
           },
+          id: request.id
+        });
+      }
+
+      case 'initialized': {
+        // Client confirms initialization is complete
+        return res.status(200).json({
+          jsonrpc: '2.0',
+          result: {},
+          id: request.id
+        });
+      }
+
+      case 'ping': {
+        // Respond to ping requests
+        return res.status(200).json({
+          jsonrpc: '2.0',
+          result: {},
           id: request.id
         });
       }
@@ -208,7 +239,10 @@ export default async function handler(req, res) {
           error: {
             code: -32601,
             message: 'Method not found',
-            data: { available_methods: ['initialize', 'tools/list', 'tools/call'] }
+            data: {
+              available_methods: ['initialize', 'initialized', 'ping', 'tools/list', 'tools/call'],
+              requested_method: request.method
+            }
           },
           id: request.id
         });
