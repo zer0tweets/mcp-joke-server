@@ -66,58 +66,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Check environment variables early and sanitize them
-  const auth0Domain = process.env.AUTH0_DOMAIN?.trim();
-  const auth0Audience = process.env.AUTH0_AUDIENCE?.trim();
-
-  if (!auth0Domain || !auth0Audience) {
-    console.error('Missing Auth0 configuration');
-    return res.status(500).json({
-      jsonrpc: '2.0',
-      error: { code: -32603, message: 'Server configuration error' },
-      id: null
-    });
-  }
-
-  // Extract and verify token
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Return WWW-Authenticate header for OAuth discovery
-    res.setHeader(
-      'WWW-Authenticate',
-      `Bearer realm="${auth0Audience}", ` +
-      `authorization_uri="https://${auth0Domain}/authorize", ` +
-      `token_uri="https://${auth0Domain}/oauth/token"`
-    );
-    return res.status(401).json({
-      jsonrpc: '2.0',
-      error: {
-        code: -32001,
-        message: 'Authentication required',
-        data: {
-          auth0_domain: auth0Domain,
-          audience: auth0Audience
-        }
-      },
-      id: null
-    });
-  }
-
-  const token = authHeader.substring(7);
-
-  // Verify the JWT token
-  const payload = await verifyAuth0Token(token, auth0Domain, auth0Audience);
-
-  if (!payload) {
-    return res.status(401).json({
-      jsonrpc: '2.0',
-      error: { code: -32001, message: 'Invalid token' },
-      id: null
-    });
-  }
-
-  // Parse JSON-RPC request
+  // Parse JSON-RPC request first to determine if auth is needed
   const request = req.body;
 
   if (!request || request.jsonrpc !== '2.0') {
@@ -130,6 +79,62 @@ export default async function handler(req, res) {
 
   // Check if this is a notification (no id field) - no response needed
   const isNotification = !('id' in request);
+
+  // Check if method requires authentication
+  const requiresAuth = ['tools/call'].includes(request.method);
+
+  if (requiresAuth) {
+    // Check environment variables
+    const auth0Domain = process.env.AUTH0_DOMAIN?.trim();
+    const auth0Audience = process.env.AUTH0_AUDIENCE?.trim();
+
+    if (!auth0Domain || !auth0Audience) {
+      console.error('Missing Auth0 configuration');
+      return res.status(500).json({
+        jsonrpc: '2.0',
+        error: { code: -32603, message: 'Server configuration error' },
+        id: request.id || null
+      });
+    }
+
+    // Extract and verify token
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // Return WWW-Authenticate header for OAuth discovery
+      res.setHeader(
+        'WWW-Authenticate',
+        `Bearer realm="${auth0Audience}", ` +
+        `authorization_uri="https://${auth0Domain}/authorize", ` +
+        `token_uri="https://${auth0Domain}/oauth/token"`
+      );
+      return res.status(401).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32001,
+          message: 'Authentication required',
+          data: {
+            auth0_domain: auth0Domain,
+            audience: auth0Audience
+          }
+        },
+        id: request.id || null
+      });
+    }
+
+    const token = authHeader.substring(7);
+
+    // Verify the JWT token
+    const payload = await verifyAuth0Token(token, auth0Domain, auth0Audience);
+
+    if (!payload) {
+      return res.status(401).json({
+        jsonrpc: '2.0',
+        error: { code: -32001, message: 'Invalid token' },
+        id: request.id || null
+      });
+    }
+  }
 
   // Handle MCP methods
   try {
