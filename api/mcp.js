@@ -128,6 +128,9 @@ export default async function handler(req, res) {
     });
   }
 
+  // Check if this is a notification (no id field) - no response needed
+  const isNotification = !('id' in request);
+
   // Handle MCP methods
   try {
     switch (request.method) {
@@ -150,7 +153,10 @@ export default async function handler(req, res) {
       }
 
       case 'initialized': {
-        // Client confirms initialization is complete
+        // Client confirms initialization is complete (notification - no response)
+        if (isNotification) {
+          return res.status(200).end();
+        }
         return res.status(200).json({
           jsonrpc: '2.0',
           result: {},
