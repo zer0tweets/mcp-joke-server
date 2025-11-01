@@ -35,8 +35,7 @@ export default async function handler(req, res) {
       jwks_uri: auth0Metadata.jwks_uri,
       response_types_supported: auth0Metadata.response_types_supported || ['code'],
       grant_types_supported: auth0Metadata.grant_types_supported || [
-        'authorization_code',
-        'refresh_token'
+        'client_credentials'
       ],
       code_challenge_methods_supported: auth0Metadata.code_challenge_methods_supported || [
         'S256'
