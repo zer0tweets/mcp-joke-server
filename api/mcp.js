@@ -67,9 +67,28 @@ export default async function handler(req, res) {
   }
 
   // Parse JSON-RPC request first to determine if auth is needed
-  const request = req.body;
+  let request = req.body;
+
+  // Handle case where body might not be parsed
+  if (typeof request === 'string') {
+    try {
+      request = JSON.parse(request);
+    } catch (e) {
+      console.error('Failed to parse body as JSON:', e);
+      return res.status(400).json({
+        jsonrpc: '2.0',
+        error: { code: -32700, message: 'Parse error' },
+        id: null
+      });
+    }
+  }
+
+  // Log for debugging
+  console.log('Request body:', JSON.stringify(request));
+  console.log('Content-Type:', req.headers['content-type']);
 
   if (!request || request.jsonrpc !== '2.0') {
+    console.error('Invalid JSON-RPC request:', request);
     return res.status(400).json({
       jsonrpc: '2.0',
       error: { code: -32600, message: 'Invalid Request - not JSON-RPC 2.0' },
